@@ -2,6 +2,8 @@
 
 Cross-platform Python client for `KMBox Net` devices.
 
+[中文文档](README.zh-CN.md)
+
 This package merges the useful parts of the public KMBox ecosystem:
 - the official `kvmaibox/kmboxnet` protocol and command set
 - the Java ergonomics from `OceanTw/KMNet.java`
