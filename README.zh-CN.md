@@ -49,6 +49,37 @@ client.click(MouseButton.LEFT)
 client.close()
 ```
 
+## 交互式测试 CLI
+
+安装后可直接运行：
+
+```bash
+kmbox-interactive --host 192.168.2.188 --port 6314 --uuid 39EBDC32
+```
+
+在源码目录中也可以这样运行：
+
+```bash
+PYTHONPATH=src python -m kmbox_universal.interactive --host 192.168.2.188 --port 6314 --uuid 39EBDC32
+```
+
+CLI 支持常用手工测试命令，例如：
+
+- `press c 60`
+- `combo LEFT_CTRL,C 60`
+- `type hello`
+- `move 100 0`
+- `move_auto 300 100 200`
+- `click left 50`
+- `click_at 10 10 left 50`
+- `monitor_start 5002`
+- `state`
+- `mask left on`
+- `unmask_all`
+- `lcd_color 0xF800`
+
+进入 CLI 后输入 `help` 可以看到完整命令列表。
+
 ## 构造函数
 
 ```python

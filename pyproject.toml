@@ -27,6 +27,9 @@ classifiers = [
 ]
 dependencies = []
 
+[project.scripts]
+kmbox-interactive = "kmbox_universal.interactive:main"
+
 [project.optional-dependencies]
 dev = [
   "pytest>=8",

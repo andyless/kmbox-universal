@@ -49,6 +49,37 @@ client.click(MouseButton.LEFT)
 client.close()
 ```
 
+## Interactive Test CLI
+
+After install:
+
+```bash
+kmbox-interactive --host 192.168.2.188 --port 6314 --uuid 39EBDC32
+```
+
+Or from source:
+
+```bash
+PYTHONPATH=src python -m kmbox_universal.interactive --host 192.168.2.188 --port 6314 --uuid 39EBDC32
+```
+
+The CLI supports common manual test commands:
+
+- `press c 60`
+- `combo LEFT_CTRL,C 60`
+- `type hello`
+- `move 100 0`
+- `move_auto 300 100 200`
+- `click left 50`
+- `click_at 10 10 left 50`
+- `monitor_start 5002`
+- `state`
+- `mask left on`
+- `unmask_all`
+- `lcd_color 0xF800`
+
+Use `help` inside the CLI to see the full command list.
+
 ## Constructor
 
 ```python
