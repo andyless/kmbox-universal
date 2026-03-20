@@ -1,4 +1,5 @@
 import struct
+from unittest.mock import patch
 
 from kmbox_universal import HidKey, KMBoxClient
 from kmbox_universal.commands import CMD_CONNECT, CMD_KEYBOARD_ALL, CMD_MOUSE_AUTOMOVE, CMD_MOUSE_MOVE
@@ -60,8 +61,31 @@ def test_key_press_sends_keyboard_command():
 def test_move_to_homes_then_moves():
     client, sock = make_client()
     baseline = len(sock.sent)
-    client.move_to(10, 10, duration_ms=120)
+    with patch("kmbox_universal.client.random.choice", return_value="top_left"):
+        client.move_to(10, 10, duration_ms=120)
     packets = [struct.unpack("<IIII", data[:16])[3] for data, _ in sock.sent[baseline:]]
     assert packets[:4] == [CMD_MOUSE_MOVE] * 4
     assert packets[-1] == CMD_MOUSE_AUTOMOVE
+    client.close()
+
+
+def test_move_to_from_bottom_right_reverses_target_delta():
+    client, sock = make_client()
+    baseline = len(sock.sent)
+    with patch("kmbox_universal.client.random.choice", return_value="bottom_right"):
+        client.move_to(10, 10, duration_ms=120)
+
+    move_packets = sock.sent[baseline:baseline + 4]
+    for data, _ in move_packets:
+        _mac, _rand, _index, cmd = struct.unpack("<IIII", data[:16])
+        assert cmd == CMD_MOUSE_MOVE
+        buttons, x, y, wheel = struct.unpack("<4i", data[16:32])
+        assert (buttons, x, y, wheel) == (0, 10000, 10000, 0)
+
+    final_data, _ = sock.sent[baseline + 4]
+    _mac, rand_value, _index, cmd = struct.unpack("<IIII", final_data[:16])
+    assert rand_value == 120
+    assert cmd == CMD_MOUSE_AUTOMOVE
+    buttons, x, y, wheel = struct.unpack("<4i", final_data[16:32])
+    assert (buttons, x, y, wheel) == (0, -(2560 - 10), -(1440 - 10), 0)
     client.close()

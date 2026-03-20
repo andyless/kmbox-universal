@@ -16,7 +16,7 @@ It adds:
 - mask/unmask helpers
 - LCD, debug, VID/PID, reboot, and trace commands
 - text typing helpers
-- "absolute-ish" cursor movement by homing to top-left first
+- "absolute-ish" cursor movement by homing to a screen corner first
 
 ## Install
 
@@ -71,6 +71,8 @@ Parameters:
 - `timeout`: socket timeout in seconds
 - `auto_connect`: automatically sends the initial connect command
 - `absolute_mouse`: settings used by `move_to()` / `click_at()`
+  - `mode`: `corner_random` or `top_left_only`
+  - `screen_width` / `screen_height`: used when homing from non-top-left corners
 
 ## API Coverage
 
@@ -286,7 +288,28 @@ This package provides a pragmatic helper:
 client.click_at(10, 10)
 ```
 
-It first "homes" to the top-left edge, then moves to the requested target.
+By default it first homes to one of the four screen corners at random, then moves from that corner to the requested target.
+If you want the old fixed behavior, use `AbsoluteMouseConfig(mode="top_left_only")`.
+
+Example:
+
+```python
+from kmbox_universal import AbsoluteMouseConfig, KMBoxClient
+
+client = KMBoxClient(
+    "192.168.2.188",
+    6314,
+    "39EBDC32",
+    absolute_mouse=AbsoluteMouseConfig(
+        mode="corner_random",
+        screen_width=2560,
+        screen_height=1440,
+    ),
+)
+client.click_at(10, 10)
+client.close()
+```
+
 This works best when:
 - the target machine uses one monitor
 - the resolution stays fixed

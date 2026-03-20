@@ -19,10 +19,13 @@ from .types import CHAR_TO_KEY, CmdHead, HidKey, KeyboardModifier, MouseButton, 
 
 @dataclass(slots=True)
 class AbsoluteMouseConfig:
+    mode: str = "corner_random"
     home_step: int = 10000
     home_repeat: int = 4
     settle_ms: int = 20
     move_duration_ms: int = 160
+    screen_width: int = 2560
+    screen_height: int = 1440
 
 
 class KMBoxClient:
@@ -448,10 +451,52 @@ class KMBoxClient:
             self.move(-self.absolute_mouse.home_step, -self.absolute_mouse.home_step)
             time.sleep(self.absolute_mouse.settle_ms / 1000.0)
 
+    def home_corner(self, corner: str) -> None:
+        step = self.absolute_mouse.home_step
+        normalized = corner.strip().lower()
+        if normalized == "top_left":
+            dx, dy = -step, -step
+        elif normalized == "top_right":
+            dx, dy = step, -step
+        elif normalized == "bottom_left":
+            dx, dy = -step, step
+        elif normalized == "bottom_right":
+            dx, dy = step, step
+        else:
+            raise ValueError(f"Unsupported home corner '{corner}'")
+
+        for _ in range(max(1, self.absolute_mouse.home_repeat)):
+            self.move(dx, dy)
+            time.sleep(self.absolute_mouse.settle_ms / 1000.0)
+
+    def _pick_home_corner(self) -> str:
+        mode = self.absolute_mouse.mode.strip().lower()
+        if mode == "top_left_only":
+            return "top_left"
+        if mode == "corner_random":
+            return random.choice(["top_left", "top_right", "bottom_left", "bottom_right"])
+        raise ValueError(f"Unsupported absolute mouse mode '{self.absolute_mouse.mode}'")
+
+    def _target_delta_from_corner(self, x: int, y: int, corner: str) -> tuple[int, int]:
+        width = self.absolute_mouse.screen_width
+        height = self.absolute_mouse.screen_height
+        normalized = corner.strip().lower()
+        if normalized == "top_left":
+            return x, y
+        if normalized == "top_right":
+            return -(width - x), y
+        if normalized == "bottom_left":
+            return x, -(height - y)
+        if normalized == "bottom_right":
+            return -(width - x), -(height - y)
+        raise ValueError(f"Unsupported home corner '{corner}'")
+
     def move_to(self, x: int, y: int, duration_ms: int | None = None) -> bool:
-        self.home_top_left()
+        corner = self._pick_home_corner()
+        self.home_corner(corner)
         time.sleep(self.absolute_mouse.settle_ms / 1000.0)
-        return self.move_auto(x, y, duration_ms or self.absolute_mouse.move_duration_ms)
+        dx, dy = self._target_delta_from_corner(x, y, corner)
+        return self.move_auto(dx, dy, duration_ms or self.absolute_mouse.move_duration_ms)
 
     def click_at(self, x: int, y: int, button: MouseButton | str | int = MouseButton.LEFT, duration_ms: int = 50) -> bool:
         self.move_to(x, y)

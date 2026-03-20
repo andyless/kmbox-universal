@@ -16,7 +16,7 @@
 - 键盘鼠标 mask / unmask
 - LCD、debug、VID/PID、reboot、trace 命令
 - 文本输入辅助
-- 通过“先归零再移动”实现的近似绝对坐标点击
+- 通过“先归零到某个屏幕角再移动”实现的近似绝对坐标点击
 
 ## 安装
 
@@ -71,6 +71,8 @@ KMBoxClient(
 - `timeout`：socket 超时时间，单位秒
 - `auto_connect`：初始化时是否自动发送连接命令
 - `absolute_mouse`：`move_to()` / `click_at()` 使用的近似绝对定位参数
+  - `mode`：`corner_random` 或 `top_left_only`
+  - `screen_width` / `screen_height`：在非左上角归零时用于反推目标位移
 
 ## 功能清单
 
@@ -287,11 +289,33 @@ client.close()
 client.click_at(10, 10)
 ```
 
-执行逻辑是：
-1. 先把鼠标持续推到左上角边界
-2. 把那个位置近似当作 `(0, 0)`
-3. 再从左上角相对移动到目标点
-4. 执行点击
+默认执行逻辑是：
+1. 先随机选择四个角中的一个
+2. 把鼠标持续推到这个角的屏幕边界
+3. 把这个角近似当作定位基准
+4. 再从该角反推并移动到目标点
+5. 执行点击
+
+如果你想保持旧行为，可以使用 `AbsoluteMouseConfig(mode="top_left_only")`。
+
+示例：
+
+```python
+from kmbox_universal import AbsoluteMouseConfig, KMBoxClient
+
+client = KMBoxClient(
+    "192.168.2.188",
+    6314,
+    "39EBDC32",
+    absolute_mouse=AbsoluteMouseConfig(
+        mode="corner_random",
+        screen_width=2560,
+        screen_height=1440,
+    ),
+)
+client.click_at(10, 10)
+client.close()
+```
 
 这个方案在以下条件下效果最好：
 - 目标机器只有一个显示器
